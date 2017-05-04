@@ -2,7 +2,6 @@
 	Canvas Course Analytics Script
 
 '''
-import urllib2
 import requests
 import json
 
@@ -34,12 +33,23 @@ class Course(object):
 	def get_total_enrollment(self):
 
 		# Get a list of students by course id
-		course_id = ######
-		auth_token = "<your auth token here>"
-		query_url = "https://<your canvas instance>.instructure.com/api/v1/courses/" + str(course_id) + "/students?access_token=" + auth_token
-		students = urllib2.urlopen(query_url).read()
 
-		#print(students)
+		# temporary course id for testing 
+		course_id = ########
+
+		# authentication token for testing
+		auth_token = "<your authentication token>"
+
+		# URL call to API for data
+		query_url = "https://<your canvas instance>.instructure.com/api/v1/courses/" + str(course_id) + "/students"
+		
+		# Must pass the auth_token through header (also could do through string, however, not safe)
+		headers = {"Authorization": "Bearer " + auth_token}
+
+		# Extract students json object
+		students = requests.get(query_url, headers=headers).json()
+
+		# Get number of enrolled students and return value
 		return len(students)
 
 	# This method sets the init variable grad_standing (is the course a graduate course)
