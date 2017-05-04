@@ -2,7 +2,7 @@
 	Canvas Course Analytics Script
 
 '''
-
+import urllib2
 import requests
 import json
 
@@ -26,7 +26,7 @@ class Course(object):
 	def __init__(self, course):
 		self.course = course
 		self.course_num = course[(course.index(" ") + 1):]
-		self.credit_hours = course[(course.index(" ") + 1):(course.index(" ") + 2)]
+		self.credit_hours = int(course[(course.index(" ") + 1):(course.index(" ") + 2)])
 		self.grad_standing = self.is_grad_standing()
 		self.num_students = self.get_total_enrollment()
 
@@ -34,10 +34,12 @@ class Course(object):
 	def get_total_enrollment(self):
 
 		# Get a list of students by course id
-		course_id = 1097934
-		query_url = "https://utexas.instructure.com/api/v1/courses/" + str(course_id) + "/students"
-		
-		print(students)
+		course_id = ######
+		auth_token = "<your auth token here>"
+		query_url = "https://<your canvas instance>.instructure.com/api/v1/courses/" + str(course_id) + "/students?access_token=" + auth_token
+		students = urllib2.urlopen(query_url).read()
+
+		#print(students)
 		return len(students)
 
 	# This method sets the init variable grad_standing (is the course a graduate course)
@@ -69,7 +71,7 @@ class Course(object):
 		course_level = "Graduate" if self.grad_standing else "Undergraduate"
 
 		print("Course Information for " + self.course + ":")
-		print("Course Number: " + self.course_num + "\nCredit Hours: " + self.credit_hours + "\nCourse Level: " + course_level + "\n")
+		print("Course Number: " + self.course_num + "\nCredit Hours: " + str(self.credit_hours) + "\nCourse Level: " + course_level + "\nNumber of Enrolled Students:" + str(self.num_students) + "\n")
 
 
 if __name__ == '__main__':
