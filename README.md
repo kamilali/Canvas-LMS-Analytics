@@ -13,7 +13,6 @@ Modify the following line of code with your newly generated authentication token
 '''
 # authentication token for testing
 auth_token = "<Your authentication token>"
-
 '''
 
 
