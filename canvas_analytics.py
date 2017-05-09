@@ -157,4 +157,4 @@ if __name__ == '__main__':
 	# Get info for each course
 	for course in courses:
 		curr_course = Course(course['course_code'], int(course['course_id']))
-		#curr_course.print_course_info()
+		curr_course.print_course_info()
