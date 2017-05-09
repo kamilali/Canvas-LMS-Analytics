@@ -5,6 +5,10 @@
 import requests
 import json
 
+
+# authentication token for testing
+auth_token = "<Your authentication token>"
+
 # This function checks if the passed in value is a number
 def is_number(value):
 	try:
@@ -22,23 +26,40 @@ def is_number(value):
 
 class Course(object):
 
-	def __init__(self, course):
+	def __init__(self, course, course_id):
 		self.course = course
-		self.course_num = course[(course.index(" ") + 1):]
-		self.credit_hours = int(course[(course.index(" ") + 1):(course.index(" ") + 2)])
+
+		# default credit hours
+		credit_hours = 0
+
+		if (course.find(" ") != -1) and (len(course) > (course.index(" ") + 2)) and is_number(course[(course.index(" ") + 1):(course.index(" ") + 2)]):
+			# This is the correct usage (handle normally)
+			self.course_num = course[(course.index(" ") + 1):]
+			credit_hours = course[(course.index(" ") + 1):(course.index(" ") + 2)]
+		
+		else:
+			# This requires more processing to figure out what the course number is
+			# Some seperate course subject and name by dashes and others by nothing
+			if (course.find("-") != -1) and (len(course) > (course.index("-") + 2)) and is_number(course[(course.index("-") + 1):(course.index("-") + 2)]):
+				self.course_num = course[(course.index("-") + 1):]
+				credit_hours = course[(course.index("-") + 1):(course.index("-") + 2)]
+			elif len(course) > 4 and is_number(course[2:3]):
+				self.course_num = course[2:]
+				credit_hours = course[2:3]
+			elif len(course) > 5 and is_number(course[3:4]):
+				self.course_num = course[3:]
+				credit_hours = course[3:4]
+			else:
+				self.course_num = "000"
+		
+		self.credit_hours = int(credit_hours) if is_number(credit_hours) else 0
 		self.grad_standing = self.is_grad_standing()
-		self.num_students = self.get_total_enrollment()
+		self.num_students = self.get_total_enrollment(course_id)
 
 	# This method sets the init variable num_students (how many total students are enrolled in the course)
-	def get_total_enrollment(self):
+	def get_total_enrollment(self, course_id):
 
 		# Get a list of students by course id
-
-		# temporary course id for testing 
-		course_id = ########
-
-		# authentication token for testing
-		auth_token = "<your authentication token>"
 
 		# URL call to API for data
 		query_url = "https://<your canvas instance>.instructure.com/api/v1/courses/" + str(course_id) + "/students"
@@ -69,8 +90,20 @@ class Course(object):
 		# which will determine whether it is a grad course or undergrad course
 		# as per the specs of the university)
 		if is_number(tail):
+			# In the case of a course that doesn't follow general guidelines
+			# (i.e. training courses, etc), we will default it to undergrad
+			if not is_number(self.course_num[1:]):
+				return False
+
+			# If the last two numbers do compose an int, then we check for grad standing
 			grad_standing = True if int(self.course_num[1:]) >= 80 else False
 		else:
+			# In the case of a course that doesn't follow general guidelines
+			# (i.e. training courses, etc), we will default it to undergrad
+			if not is_number(self.course_num[1:]):
+				return False
+
+			# If the middle two numbers do compose an int, then we check for grad standing
 			grad_standing = True if int(self.course_num[1:last_index]) >= 80 else False
 
 		return grad_standing
@@ -84,10 +117,44 @@ class Course(object):
 		print("Course Number: " + self.course_num + "\nCredit Hours: " + str(self.credit_hours) + "\nCourse Level: " + course_level + "\nNumber of Enrolled Students:" + str(self.num_students) + "\n")
 
 
+def get_all_courses(url, headers):
+
+	courses = []
+
+	# Since canvas limits number of elements we can get per page, we will use pagination to get all courses
+	course_listing_response = requests.get(url, headers=headers)
+	for course in course_listing_response.json():
+		curr_course = {}
+		curr_course['course_code'] = course['course_code']
+		curr_course['course_id'] = course['id']
+		courses.append(curr_course)
+
+	#while course_listing_response
+	while course_listing_response.links['current']['url'] != course_listing_response.links['last']['url']:
+
+		# There are still more courses to extract, so we grab the next url and request for the next batch
+		course_listing_response = requests.get(course_listing_response.links['next']['url'], headers=headers)
+
+		for course in course_listing_response.json():
+			curr_course = {}
+			curr_course['course_code'] = course['course_code']
+			curr_course['course_id'] = course['id']
+			courses.append(curr_course)
+
+	return courses
+
+
+
 if __name__ == '__main__':
 
-	# Test Cases
-	course = Course("ACC 321L")
-	course1 = Course("ACC 380")
-	course.print_course_info()
-	course1.print_course_info()
+	# Information we need to get list of all courses
+	url = "https://<your canvas instance>.instructure.com/api/v1/accounts/<account id>/courses?enrollment_term_id=<enrollement term id>&per_page=100"
+	headers = {"Authorization": "Bearer " + auth_token}
+
+	# We get all the courses in our canvas instance
+	courses = get_all_courses(url, headers)
+	
+	# Get info for each course
+	for course in courses:
+		curr_course = Course(course['course_code'], int(course['course_id']))
+		#curr_course.print_course_info()
