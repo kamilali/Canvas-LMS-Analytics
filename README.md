@@ -2,7 +2,7 @@
 Generates analytical reports using data from UT Austin's Canvas LMS Instance
 
 ## How to Generate Authentication Token
-Go to https://<your canvas instance>.instructure.com/profile/settings
+Go to https://yourcanvasinstance.instructure.com/profile/settings
 
 From there, generate a new access token. You should see the following modal:
 
