@@ -29,30 +29,10 @@ class Course(object):
 	def __init__(self, course, course_id):
 		self.course = course
 
-		# default credit hours
-		credit_hours = 0
-
-		if (course.find(" ") != -1) and (len(course) > (course.index(" ") + 2)) and is_number(course[(course.index(" ") + 1):(course.index(" ") + 2)]):
-			# This is the correct usage (handle normally)
-			self.course_num = course[(course.index(" ") + 1):]
-			credit_hours = course[(course.index(" ") + 1):(course.index(" ") + 2)]
-		
-		else:
-			# This requires more processing to figure out what the course number is
-			# Some seperate course subject and name by dashes and others by nothing
-			if (course.find("-") != -1) and (len(course) > (course.index("-") + 2)) and is_number(course[(course.index("-") + 1):(course.index("-") + 2)]):
-				self.course_num = course[(course.index("-") + 1):]
-				credit_hours = course[(course.index("-") + 1):(course.index("-") + 2)]
-			elif len(course) > 4 and is_number(course[2:3]):
-				self.course_num = course[2:]
-				credit_hours = course[2:3]
-			elif len(course) > 5 and is_number(course[3:4]):
-				self.course_num = course[3:]
-				credit_hours = course[3:4]
-			else:
-				self.course_num = "000"
-		
-		self.credit_hours = int(credit_hours) if is_number(credit_hours) else 0
+		# credit hours from sis id
+		first_index = course_id.index("_") + 1
+		self.credit_hours = int(course_id[first_index, first_index + 1])
+		self.course_num = course_id[first_index, course_id.index("_", first_index)]
 		self.grad_standing = self.is_grad_standing()
 		self.num_students = self.get_total_enrollment(course_id)
 
