@@ -12,7 +12,7 @@ Fill in the information to your liking.
 
 Next, modify the following line of code with your newly generated authentication token in the canvas_analytics.py script:
 
-```
+```python
 # authentication token for testing
 auth_token = "<Your authentication token>"
 ```
