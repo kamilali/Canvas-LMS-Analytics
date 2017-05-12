@@ -118,7 +118,7 @@ def get_all_courses(url, headers):
 		for course in course_listing_response.json():
 			curr_course = {}
 			curr_course['course_code'] = course['course_code']
-			curr_course['course_id'] = course['id']
+			curr_course['course_id'] = course['sis_course_id']
 			courses.append(curr_course)
 
 	return courses
