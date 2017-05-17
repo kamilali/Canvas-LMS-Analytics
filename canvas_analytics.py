@@ -26,13 +26,17 @@ def is_number(value):
 
 class Course(object):
 
-	def __init__(self, course, course_id):
+	def __init__(self, course, course_id, sis_course_id):
 		self.course = course
 
 		# credit hours from sis id
-		first_index = course_id.index("_") + 1
-		self.credit_hours = int(course_id[first_index, first_index + 1])
-		self.course_num = course_id[first_index, course_id.index("_", first_index)]
+		first_index = sis_course_id.index("_") + 1
+		hours = sis_course_id[first_index:(first_index + 1)]
+		if is_number(hours):
+			self.credit_hours = int(hours)
+		else:
+			self.credit_hours = 0
+		self.course_num = sis_course_id[first_index:(sis_course_id.index("_", first_index))]
 		self.grad_standing = self.is_grad_standing()
 		self.num_students = self.get_total_enrollment(course_id)
 
@@ -107,6 +111,7 @@ def get_all_courses(url, headers):
 		curr_course = {}
 		curr_course['course_code'] = course['course_code']
 		curr_course['course_id'] = course['id']
+		curr_course['sis_course_id'] = course['sis_course_id']
 		courses.append(curr_course)
 
 	#while course_listing_response
@@ -118,7 +123,8 @@ def get_all_courses(url, headers):
 		for course in course_listing_response.json():
 			curr_course = {}
 			curr_course['course_code'] = course['course_code']
-			curr_course['course_id'] = course['sis_course_id']
+			curr_course['course_id'] = course['id']
+			curr_course['sis_course_id'] = course['sis_course_id']
 			courses.append(curr_course)
 
 	return courses
@@ -134,7 +140,13 @@ if __name__ == '__main__':
 	# We get all the courses in our canvas instance
 	courses = get_all_courses(url, headers)
 	
+	# total students
+	total_students = 0
+
 	# Get info for each course
 	for course in courses:
-		curr_course = Course(course['course_code'], int(course['course_id']))
-		curr_course.print_course_info()
+		curr_course = Course(course['course_code'], int(course['course_id']), course['sis_course_id'])
+		total_students = total_students + curr_course.num_students
+		#curr_course.print_course_info()
+
+	print(total_students)
